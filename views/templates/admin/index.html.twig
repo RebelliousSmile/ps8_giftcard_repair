@@ -1,0 +1,96 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-header-title">
+            <i class="material-icons">card_giftcard</i>
+            {{ 'Giftcard Repair'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+        </h3>
+    </div>
+    <div class="card-body">
+
+        {% if not giftcard_installed %}
+            {# Module thegiftcard not installed — graceful degradation #}
+            <div class="alert alert-warning" role="alert">
+                <div class="alert-text">
+                    <strong>{{ 'Module thegiftcard not installed'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</strong><br>
+                    {{ 'The thegiftcard module is not installed on this PrestaShop instance. This repair tool requires thegiftcard to be installed and active.'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+                </div>
+            </div>
+        {% else %}
+            {# Diagnostic summary #}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-secondary">
+                        <div class="card-body">
+                            <h2 class="display-4">{{ diagnosis.total_cart_rules }}</h2>
+                            <p class="text-muted">{{ 'Total gift card rules'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h2 class="display-4 text-success">{{ diagnosis.existing_entries }}</h2>
+                            <p class="text-muted">{{ 'In giftcard table'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center {% if diagnosis.missing_entries > 0 %}border-danger{% else %}border-success{% endif %}">
+                        <div class="card-body">
+                            <h2 class="display-4 {% if diagnosis.missing_entries > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ diagnosis.missing_entries }}
+                            </h2>
+                            <p class="text-muted">{{ 'Missing entries'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center {% if diagnosis.orphaned_entries > 0 %}border-warning{% else %}border-success{% endif %}">
+                        <div class="card-body">
+                            <h2 class="display-4 {% if diagnosis.orphaned_entries > 0 %}text-warning{% else %}text-success{% endif %}">
+                                {{ diagnosis.orphaned_entries }}
+                            </h2>
+                            <p class="text-muted">{{ 'Orphaned entries'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if diagnosis.status == 'ok' %}
+                <div class="alert alert-success">
+                    {{ 'All gift card entries are consistent. No repair needed.'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+                </div>
+            {% else %}
+                {% if diagnosis.missing_entries > 0 %}
+                    <div class="alert alert-danger">
+                        {{ '%count% missing entries found in the giftcard table.'|trans({'%count%': diagnosis.missing_entries}, 'Modules.Scgiftcardrepair.Admin') }}
+                    </div>
+                {% endif %}
+                {% if diagnosis.orphaned_entries > 0 %}
+                    <div class="alert alert-warning">
+                        {{ '%count% orphaned entries found in the giftcard table (no matching cart_rule).'|trans({'%count%': diagnosis.orphaned_entries}, 'Modules.Scgiftcardrepair.Admin') }}
+                    </div>
+                {% endif %}
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ path('sc_giftcard_repair_preview') }}" class="btn btn-outline-primary">
+                        <i class="material-icons">preview</i>
+                        {{ 'Preview fix'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+                    </a>
+                    <form method="post" action="{{ path('sc_giftcard_repair_apply') }}" onsubmit="return confirm('{{ 'Are you sure you want to apply this fix? This action cannot be undone.'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}');">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="material-icons">build</i>
+                            {{ 'Apply fix'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-header-title">
+            <i class="material-icons">done_all</i>
+            {{ 'Giftcard Repair Result'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+        </h3>
+    </div>
+    <div class="card-body">
+
+        {% if not result.success %}
+            <div class="alert alert-danger">
+                <strong>{{ 'Fix failed'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</strong><br>
+                {{ result.error ?? 'An unknown error occurred.' }}
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                <strong>{{ 'Fix applied successfully'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</strong>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h2 class="display-4 text-success">{{ result.inserted }}</h2>
+                            <p class="text-muted">{{ 'Entries inserted'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <h2 class="display-4 text-warning">{{ result.skipped }}</h2>
+                            <p class="text-muted">{{ 'Entries skipped'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if result.details is not empty %}
+                <h5>{{ 'Details'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</h5>
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>{{ 'Cart Rule ID'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Code'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Action'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Details'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in result.details %}
+                            <tr class="{{ detail.action == 'inserted' ? 'table-success' : 'table-warning' }}">
+                                <td>{{ detail.id_cart_rule }}</td>
+                                <td><code>{{ detail.code }}</code></td>
+                                <td>
+                                    {% if detail.action == 'inserted' %}
+                                        <span class="badge badge-success">{{ 'Inserted'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">{{ 'Skipped'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if detail.action == 'inserted' %}
+                                        Order #{{ detail.id_order }} — {{ detail.amount|number_format(2) }} €
+                                    {% else %}
+                                        {{ detail.reason ?? '' }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% endif %}
+
+        <div class="mt-3">
+            <a href="{{ path('sc_giftcard_repair_index') }}" class="btn btn-outline-secondary">
+                <i class="material-icons">arrow_back</i>
+                {{ 'Back to diagnosis'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

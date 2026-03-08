@@ -1,0 +1,174 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-header-title">
+            <i class="material-icons">preview</i>
+            {{ 'Preview: Giftcard Rebuild'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+        </h3>
+    </div>
+    <div class="card-body">
+
+        {% if not result.success %}
+            <div class="alert alert-danger">
+                {{ result.error ?? 'An error occurred.' }}
+            </div>
+        {% else %}
+            {# Summary counters #}
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3>{{ result.changes.total_gift_card_rules }}</h3>
+                            <p class="text-muted small">{{ 'Total rules'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <h3 class="text-success">{{ result.changes.already_in_giftcard_table }}</h3>
+                            <p class="text-muted small">{{ 'Already OK'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-danger">
+                        <div class="card-body">
+                            <h3 class="text-danger">{{ result.changes.missing_from_giftcard_table }}</h3>
+                            <p class="text-muted small">{{ 'Missing'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-primary">
+                        <div class="card-body">
+                            <h3 class="text-primary">{{ result.changes.fixable }}</h3>
+                            <p class="text-muted small">{{ 'Fixable'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <h3 class="text-warning">{{ result.changes.not_fixable }}</h3>
+                            <p class="text-muted small">{{ 'Not fixable'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h3>{{ result.changes.orphaned_entries }}</h3>
+                            <p class="text-muted small">{{ 'Orphaned'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Entries to insert #}
+            {% if result.entries_to_insert is not empty %}
+                <h5>{{ 'Entries to insert'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</h5>
+                <table class="table table-sm table-bordered mb-4">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>{{ 'Cart Rule ID'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Code'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Amount'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Order'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Status'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in result.entries_to_insert %}
+                            <tr class="{{ entry.can_fix ? 'table-success' : 'table-warning' }}">
+                                <td>{{ entry.id_cart_rule }}</td>
+                                <td><code>{{ entry.code }}</code></td>
+                                <td>{{ entry.amount|number_format(2) }} €</td>
+                                <td>
+                                    {% if entry.can_fix %}
+                                        #{{ entry.id_order }} ({{ entry.order_reference }})
+                                    {% else %}
+                                        <em class="text-warning">{{ entry.reason }}</em>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if entry.can_fix %}
+                                        <span class="badge badge-success">{{ 'Fixable'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">{{ 'Cannot fix'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-success">
+                    {{ 'No missing entries to insert.'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+                </div>
+            {% endif %}
+
+            {# Balance summary #}
+            {% if result.balance_summary is not empty %}
+                <h5>{{ 'Balance summary'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</h5>
+                <table class="table table-sm table-bordered mb-4">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>{{ 'Code'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Amount'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Consumed'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Remaining'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'Status'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                            <th>{{ 'In giftcard table'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in result.balance_summary %}
+                            <tr>
+                                <td><code>{{ card.code }}</code></td>
+                                <td>{{ card.amount|number_format(2) }} €</td>
+                                <td>{{ card.consumed|number_format(2) }} €</td>
+                                <td>{{ card.remaining|number_format(2) }} €</td>
+                                <td>
+                                    {% if card.status == 'active' %}
+                                        <span class="badge badge-success">{{ 'Active'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">{{ 'Used'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if card.in_giftcard_table %}
+                                        <span class="badge badge-success">{{ 'Yes'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{{ 'No'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+
+            {# Action buttons #}
+            <div class="d-flex gap-2 mt-3">
+                <a href="{{ path('sc_giftcard_repair_index') }}" class="btn btn-outline-secondary">
+                    <i class="material-icons">arrow_back</i>
+                    {{ 'Back'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}
+                </a>
+                {% if result.changes.fixable > 0 %}
+                    <form method="post" action="{{ path('sc_giftcard_repair_apply') }}" onsubmit="return confirm('{{ 'Are you sure you want to apply this fix? This action cannot be undone.'|trans({}, 'Modules.Scgiftcardrepair.Admin') }}');">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="material-icons">build</i>
+                            {{ 'Apply fix (%count% entries)'|trans({'%count%': result.changes.fixable}, 'Modules.Scgiftcardrepair.Admin') }}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

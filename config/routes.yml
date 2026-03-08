@@ -1,0 +1,21 @@
+sc_giftcard_repair_index:
+  path: /giftcard-repair
+  methods: [GET]
+  defaults:
+    _controller: sc_giftcard_repair.controller.main::indexAction
+    _legacy_controller: AdminScGiftcardRepair
+    _legacy_link: AdminScGiftcardRepair
+
+sc_giftcard_repair_preview:
+  path: /giftcard-repair/preview
+  methods: [GET]
+  defaults:
+    _controller: sc_giftcard_repair.controller.main::previewAction
+    _legacy_controller: AdminScGiftcardRepair
+
+sc_giftcard_repair_apply:
+  path: /giftcard-repair/apply
+  methods: [POST]
+  defaults:
+    _controller: sc_giftcard_repair.controller.main::applyAction
+    _legacy_controller: AdminScGiftcardRepair

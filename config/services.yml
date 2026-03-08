@@ -1,0 +1,21 @@
+services:
+  _defaults:
+    public: true
+    autowire: true
+    autoconfigure: true
+
+  # Services
+  sc_giftcard_repair.service.fixer:
+    class: ScGiftcardRepair\Service\GiftCardFixer
+    arguments:
+      - '@doctrine.dbal.default_connection'
+      - '%database_prefix%'
+
+  # Controllers
+  sc_giftcard_repair.controller.main:
+    class: ScGiftcardRepair\Controller\Admin\GiftCardRepairController
+    arguments:
+      - '@sc_giftcard_repair.service.fixer'
+      - '@security.csrf.token_manager'
+    calls:
+      - [setContainer, ['@service_container']]
