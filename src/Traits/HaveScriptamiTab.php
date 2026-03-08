@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace ScGiftcardRepair\Traits;
 
 use Configuration;
-use Db;
 use LanguageCore as Language;
 use TabCore as Tab;
 use ValidateCore as Validate;
@@ -89,52 +88,31 @@ trait HaveScriptamiTab
      */
     public function uninstallScriptamiTab(): bool
     {
-        $db = Db::getInstance();
-        $db->execute('START TRANSACTION');
-
-        try {
-            // Remove child tab
-            $tabId = (int) Tab::getIdFromClassName($this->moduleControllerClass);
-            if ($tabId > 0) {
-                $tab = new Tab($tabId);
-                if (Validate::isLoadedObject($tab)) {
-                    if (!$tab->delete()) {
-                        $db->execute('ROLLBACK');
-
-                        return false;
-                    }
-                }
+        // Remove child tab
+        $tabId = (int) Tab::getIdFromClassName($this->moduleControllerClass);
+        if ($tabId > 0) {
+            $tab = new Tab($tabId);
+            if (Validate::isLoadedObject($tab) && !$tab->delete()) {
+                return false;
             }
-
-            // Remove from module list
-            $modules = $this->getScriptamiModules();
-            $modules = array_values(array_filter($modules, fn ($m) => $m !== $this->name));
-
-            // Remove parent tab if no more Scriptami modules
-            if (empty($modules)) {
-                $parentId = (int) Tab::getIdFromClassName($this->scriptamiParentClass);
-                if ($parentId > 0) {
-                    $parentTab = new Tab($parentId);
-                    if (Validate::isLoadedObject($parentTab)) {
-                        if (!$parentTab->delete()) {
-                            $db->execute('ROLLBACK');
-
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            $this->saveScriptamiModules($modules);
-
-            $db->execute('COMMIT');
-
-            return true;
-        } catch (\Exception $e) {
-            $db->execute('ROLLBACK');
-
-            return false;
         }
+
+        // Remove from module list
+        $modules = $this->getScriptamiModules();
+        $modules = array_values(array_filter($modules, fn ($m) => $m !== $this->name));
+
+        // Remove parent tab if no more Scriptami modules
+        if (empty($modules)) {
+            $parentId = (int) Tab::getIdFromClassName($this->scriptamiParentClass);
+            if ($parentId > 0) {
+                $parentTab = new Tab($parentId);
+                if (Validate::isLoadedObject($parentTab)) {
+                    $parentTab->delete();
+                }
+            }
+        }
+
+        return $this->saveScriptamiModules($modules);
     }
 
     /**

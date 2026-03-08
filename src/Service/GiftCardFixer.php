@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace ScGiftcardRepair\Service;
 
+use Doctrine\DBAL\Connection;
+
 /**
  * Fixer for gift card data: rebuild missing giftcard table entries
  * and verify balance consistency
@@ -24,8 +26,18 @@ namespace ScGiftcardRepair\Service;
  */
 class GiftCardFixer extends AbstractFixer
 {
-    private const GIFTCARD_PRODUCT_ID = 857;
-    private const GIFTCARD_CART_RULE_NAME = 'La carte cadeau';
+    /**
+     * @param int    $giftCardProductId    Product ID for gift cards (default: Kelenaya gift card product)
+     * @param string $giftCardCartRuleName Cart rule name used to identify gift card vouchers (default: Kelenaya naming)
+     */
+    public function __construct(
+        Connection $connection,
+        string $prefix,
+        private int $giftCardProductId = 857,
+        private string $giftCardCartRuleName = 'La carte cadeau'
+    ) {
+        parent::__construct($connection, $prefix);
+    }
 
     public function getSupportedTypes(): array
     {
@@ -145,7 +157,7 @@ class GiftCardFixer extends AbstractFixer
                 $item['id_order'] = (int) $entry['order_detail']['id_order'];
                 $item['order_reference'] = $entry['order_detail']['reference'] ?? '';
             } else {
-                $item['reason'] = 'Aucun order_detail correspondant trouve pour le produit ' . self::GIFTCARD_PRODUCT_ID;
+                $item['reason'] = 'Aucun order_detail correspondant trouve pour le produit ' . $this->giftCardProductId;
             }
 
             $toInsert[] = $item;
@@ -252,7 +264,7 @@ class GiftCardFixer extends AbstractFixer
               AND crl.id_lang = 1
               AND cr.reduction_amount > 0
             ORDER BY cr.id_cart_rule
-        ", [self::GIFTCARD_CART_RULE_NAME]);
+        ", [$this->giftCardCartRuleName]);
     }
 
     /**
@@ -292,7 +304,7 @@ class GiftCardFixer extends AbstractFixer
                 WHERE od.product_id = ?
                   AND o.id_order = ?
                 LIMIT 1
-            ", [self::GIFTCARD_PRODUCT_ID, $orderId]);
+            ", [$this->giftCardProductId, $orderId]);
 
             if ($result) {
                 return $result;
@@ -313,7 +325,7 @@ class GiftCardFixer extends AbstractFixer
                 ORDER BY o.date_add DESC
                 LIMIT 1
             ", [
-                self::GIFTCARD_PRODUCT_ID,
+                $this->giftCardProductId,
                 (int) $rule['id_customer'],
                 $rule['date_from'],
                 $rule['date_from'],
@@ -335,7 +347,7 @@ class GiftCardFixer extends AbstractFixer
               AND o.date_add <= DATE_ADD(?, INTERVAL 1 DAY)
             ORDER BY o.date_add DESC
             LIMIT 1
-        ", [self::GIFTCARD_PRODUCT_ID, $rule['date_from'], $rule['date_from']]);
+        ", [$this->giftCardProductId, $rule['date_from'], $rule['date_from']]);
 
         return $result ?: null;
     }
@@ -366,7 +378,7 @@ class GiftCardFixer extends AbstractFixer
             WHERE i.id_product = ?
             ORDER BY i.cover DESC, i.position ASC
             LIMIT 1
-        ", [self::GIFTCARD_PRODUCT_ID]);
+        ", [$this->giftCardProductId]);
 
         return $imageId ? (int) $imageId : 0;
     }

@@ -10,6 +10,10 @@ services:
     arguments:
       - '@doctrine.dbal.default_connection'
       - '%database_prefix%'
+      # giftCardProductId and giftCardCartRuleName use default values (857 / 'La carte cadeau')
+      # To override for a different shop:
+      # - 123           # giftCardProductId
+      # - 'My gift card' # giftCardCartRuleName
 
   # Controllers
   sc_giftcard_repair.controller.main:
